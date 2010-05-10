@@ -21,6 +21,18 @@ int mult(int a, int b) {
 	return gfilog[sum_log];
 }
 
+/* Divides two numbers in GF(2^W) */
+int div(int a, int b) {
+	int diff_log;
+
+	if(a == 0) return 0;
+	if(b == 0) return -1;
+	diff_log = gflog[a] - gflog[b];
+	if(diff_log < 0) diff_log += NW - 1;
+	return gfilog[diff_log];
+}
+
+
 /* Sets up logarithm and inverse logarithm
    tables for GF(2^4), GF(2^8), and GF(2^16)
    w is the wordsize i.e. GF(2^w)
@@ -50,11 +62,14 @@ int setup_tables(int w) {
 }
 
 int main(int argc, char *argv[]) {
-	if(setup_tables(4) == -1) {
+	if(setup_tables(W) == -1) {
 		fprintf(stderr, "Error setting up logarithm tables");
 		return -1;
 	}
 	printf("%d\n", mult(3, 7));      // should be 9
 	printf("%d\n", mult(13, 10));    // should be 11
+	printf("%d\n", div(13, 10));     // should be 3 
+	printf("%d\n", div(3, 7));       // should be 10
+
 	return 0;
 }
