@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <malloc.h>
 
-#define W 8
+#define W 4
 #define NW (1 << W)
 
 unsigned int prim_poly_4 = 023;
@@ -11,6 +11,15 @@ unsigned int prim_poly_8 = 0435;
 unsigned int prim_poly_16 = 0210013;
 unsigned short *gflog, *gfilog;
 
+
+/* Multiplies two numbers in GF(2^W) */
+int mult(int a, int b) {
+	int sum_log;
+	if(a == 0 || b == 0) return 0;
+	sum_log = gflog[a] + gflog[b];
+	if(sum_log >= NW - 1) sum_log -= NW - 1;
+	return gfilog[sum_log];
+}
 
 /* Sets up logarithm and inverse logarithm
    tables for GF(2^4), GF(2^8), and GF(2^16)
@@ -41,6 +50,11 @@ int setup_tables(int w) {
 }
 
 int main(int argc, char *argv[]) {
-
+	if(setup_tables(4) == -1) {
+		fprintf(stderr, "Error setting up logarithm tables");
+		return -1;
+	}
+	printf("%d\n", mult(3, 7));      // should be 9
+	printf("%d\n", mult(13, 10));    // should be 11
 	return 0;
 }
