@@ -1,6 +1,7 @@
 /* Implementation of Reed-Solomon */
 
 #include <stdio.h>
+#include <malloc.h>
 
 #define W 8
 #define NW (1 << W)
