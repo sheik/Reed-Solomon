@@ -5,7 +5,7 @@
 #include <malloc.h>
 #include <math.h>
 
-#define DEBUG 0
+#define DEBUG 1
 
 unsigned int W;
 unsigned int NW;
@@ -15,6 +15,26 @@ unsigned int prim_poly_8 = 0435;
 unsigned int prim_poly_16 = 0210013;
 unsigned short *gflog, *gfilog;
 unsigned short *F;
+
+char data[15][8] = {
+	"aaaaaaaa",
+	"bbbbbbbb",
+	"cccccccc",
+	"dddddddd",
+	"eeeeeeee",
+	"ffffffff",
+	"gggggggg",
+	"hhhhhhhh",
+	"iiiiiiii",
+	"jjjjjjjj",
+	"kkkkkkkk",
+	"llllllll",
+	"mmmmmmmm",
+	"nnnnnnnn",
+	"oooooooo"
+};
+
+unsigned short checksums[5][8];
 
 /* Multiplies two numbers in GF(2^W) */
 int gf_mult(int a, int b) {
@@ -59,10 +79,6 @@ int setup_tables(int w) {
 	for(log = 0; log < x_to_w - 1; log++) {
 		gflog[b] = (unsigned short) log;
 		gfilog[log] = (unsigned short) b;
-		if(DEBUG) {
-			printf("gflog[%d] = %d\n", b, gflog[b]);
-			printf("gfilog[%d] = %d\n",log,gfilog[log]);
-		}
 		b = b << 1;
 		if (b & x_to_w) b = b ^ prim_poly;
 	}
@@ -88,8 +104,21 @@ int init(int n, int m) {
 	return 0;
 }
 
+int generate_checksums() {
+	int i,j,k;
+	for(i = 0; i < 7; i++) {
+		for(j = 0; j < 5; j++) {
+			checksums[j][i] = 0;
+			for(k = 0; k < 15; k++) {
+				checksums[j][i] ^= (unsigned short) data[k][i] ^ (unsigned short) F[k*6 + i];
+			}
+		}
+	}
+}
+
 int main(int argc, char *argv[]) {
-	if(init(3,3) == -1) {
+	int i;
+	if(init(16,6) == -1) {
 		fprintf(stderr, "Error initializing\n");
 		return -1;
 	}
@@ -97,5 +126,9 @@ int main(int argc, char *argv[]) {
 	printf("%d\n", gf_mult(13, 10));    // should be 11
 	printf("%d\n", gf_div(13, 10));     // should be 3 
 	printf("%d\n", gf_div(3, 7));       // should be 10
+	generate_checksums();
+	for(i = 0; i < 7; i++) {
+		printf("%d\n", checksums[0][i]);
+	}
 	return 0;
 }
