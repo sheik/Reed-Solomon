@@ -1,19 +1,23 @@
 /* Implementation of Reed-Solomon */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <malloc.h>
+#include <math.h>
 
-#define W 4
-#define NW (1 << W)
+#define DEBUG 0
+
+unsigned int W;
+unsigned int NW;
 
 unsigned int prim_poly_4 = 023;
 unsigned int prim_poly_8 = 0435;
 unsigned int prim_poly_16 = 0210013;
 unsigned short *gflog, *gfilog;
-
+unsigned short *F;
 
 /* Multiplies two numbers in GF(2^W) */
-int mult(int a, int b) {
+int gf_mult(int a, int b) {
 	int sum_log;
 	if(a == 0 || b == 0) return 0;
 	sum_log = gflog[a] + gflog[b];
@@ -22,7 +26,7 @@ int mult(int a, int b) {
 }
 
 /* Divides two numbers in GF(2^W) */
-int div(int a, int b) {
+int gf_div(int a, int b) {
 	int diff_log;
 
 	if(a == 0) return 0;
@@ -55,21 +59,43 @@ int setup_tables(int w) {
 	for(log = 0; log < x_to_w - 1; log++) {
 		gflog[b] = (unsigned short) log;
 		gfilog[log] = (unsigned short) b;
+		if(DEBUG) {
+			printf("gflog[%d] = %d\n", b, gflog[b]);
+			printf("gfilog[%d] = %d\n",log,gfilog[log]);
+		}
 		b = b << 1;
 		if (b & x_to_w) b = b ^ prim_poly;
 	}
 	return 0;
 }
 
+/* Initialize the algorithm */
+int init(int n, int m) {
+	int i,j;
+	W = 4;
+	while( n + m > pow(2,W) ) W*=2;
+	if(DEBUG) printf("Initializing using W: %d\n", W);
+	NW = 1 << W;
+	F = (unsigned short *) malloc(sizeof(unsigned short) * n * m);
+	for(i = 0; i < n; i++) {
+		for(j = 0; j < m; j++) {
+			F[m * i + j] = (unsigned short) pow(j+1,i);
+			if(DEBUG)
+				printf("F[%d][%d] = %d\n",i,j,(unsigned short) pow(j+1,i));
+		}
+	}
+	setup_tables(W);
+	return 0;
+}
+
 int main(int argc, char *argv[]) {
-	if(setup_tables(W) == -1) {
-		fprintf(stderr, "Error setting up logarithm tables");
+	if(init(3,3) == -1) {
+		fprintf(stderr, "Error initializing\n");
 		return -1;
 	}
-	printf("%d\n", mult(3, 7));      // should be 9
-	printf("%d\n", mult(13, 10));    // should be 11
-	printf("%d\n", div(13, 10));     // should be 3 
-	printf("%d\n", div(3, 7));       // should be 10
-
+	printf("%d\n", gf_mult(3, 7));      // should be 9
+	printf("%d\n", gf_mult(13, 10));    // should be 11
+	printf("%d\n", gf_div(13, 10));     // should be 3 
+	printf("%d\n", gf_div(3, 7));       // should be 10
 	return 0;
 }
